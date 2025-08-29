@@ -1,0 +1,30 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0 !important;
+  min-width: 100vw;
+  min-height: 100vh;
+  background-color: white;
+  color: black
+}
+.container{
+  margin: 0;
+  padding: 0;
+}
+
+.v-field__input {
+  border: 1px solid #CDD2D5  ;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.v-field__input--focused {
+  box-shadow: none !important;
+}
