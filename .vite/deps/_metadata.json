@@ -1,0 +1,163 @@
+{
+  "hash": "e07ba3e3",
+  "configHash": "1de6594c",
+  "lockfileHash": "99834f49",
+  "browserHash": "daa99985",
+  "optimized": {
+    "vue": {
+      "src": "../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
+      "file": "vue.js",
+      "fileHash": "92a59e81",
+      "needsInterop": false
+    },
+    "bootstrap/dist/js/bootstrap.bundle.min.js": {
+      "src": "../../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
+      "file": "bootstrap_dist_js_bootstrap__bundle__min__js.js",
+      "fileHash": "bf97fe0b",
+      "needsInterop": true
+    },
+    "pinia": {
+      "src": "../../node_modules/pinia/dist/pinia.mjs",
+      "file": "pinia.js",
+      "fileHash": "ad66740a",
+      "needsInterop": false
+    },
+    "@material/web/textfield/outlined-text-field.js": {
+      "src": "../../node_modules/@material/web/textfield/outlined-text-field.js",
+      "file": "@material_web_textfield_outlined-text-field__js.js",
+      "fileHash": "1ca28081",
+      "needsInterop": false
+    },
+    "@material/web/textfield/filled-text-field.js": {
+      "src": "../../node_modules/@material/web/textfield/filled-text-field.js",
+      "file": "@material_web_textfield_filled-text-field__js.js",
+      "fileHash": "9f99b084",
+      "needsInterop": false
+    },
+    "@material/web/icon/icon.js": {
+      "src": "../../node_modules/@material/web/icon/icon.js",
+      "file": "@material_web_icon_icon__js.js",
+      "fileHash": "2310e729",
+      "needsInterop": false
+    },
+    "@material/web/button/filled-tonal-button.js": {
+      "src": "../../node_modules/@material/web/button/filled-tonal-button.js",
+      "file": "@material_web_button_filled-tonal-button__js.js",
+      "fileHash": "d28f38cf",
+      "needsInterop": false
+    },
+    "@material/web/button/filled-button.js": {
+      "src": "../../node_modules/@material/web/button/filled-button.js",
+      "file": "@material_web_button_filled-button__js.js",
+      "fileHash": "851b8a41",
+      "needsInterop": false
+    },
+    "@material/web/button/outlined-button.js": {
+      "src": "../../node_modules/@material/web/button/outlined-button.js",
+      "file": "@material_web_button_outlined-button__js.js",
+      "fileHash": "2affc900",
+      "needsInterop": false
+    },
+    "@material/web/checkbox/checkbox.js": {
+      "src": "../../node_modules/@material/web/checkbox/checkbox.js",
+      "file": "@material_web_checkbox_checkbox__js.js",
+      "fileHash": "bbd092a6",
+      "needsInterop": false
+    },
+    "@material/web/switch/switch.js": {
+      "src": "../../node_modules/@material/web/switch/switch.js",
+      "file": "@material_web_switch_switch__js.js",
+      "fileHash": "2da85135",
+      "needsInterop": false
+    },
+    "@material/web/menu/menu.js": {
+      "src": "../../node_modules/@material/web/menu/menu.js",
+      "file": "@material_web_menu_menu__js.js",
+      "fileHash": "30b9912f",
+      "needsInterop": false
+    },
+    "@material/web/menu/menu-item.js": {
+      "src": "../../node_modules/@material/web/menu/menu-item.js",
+      "file": "@material_web_menu_menu-item__js.js",
+      "fileHash": "fda0def6",
+      "needsInterop": false
+    },
+    "@material/web/radio/radio.js": {
+      "src": "../../node_modules/@material/web/radio/radio.js",
+      "file": "@material_web_radio_radio__js.js",
+      "fileHash": "7b899889",
+      "needsInterop": false
+    },
+    "@material/web/dialog/dialog.js": {
+      "src": "../../node_modules/@material/web/dialog/dialog.js",
+      "file": "@material_web_dialog_dialog__js.js",
+      "fileHash": "c9a7936e",
+      "needsInterop": false
+    },
+    "pinia-plugin-persistedstate": {
+      "src": "../../node_modules/pinia-plugin-persistedstate/dist/index.js",
+      "file": "pinia-plugin-persistedstate.js",
+      "fileHash": "b0298988",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-OIQ5LHF4": {
+      "file": "chunk-OIQ5LHF4.js"
+    },
+    "chunk-TC2PPS7T": {
+      "file": "chunk-TC2PPS7T.js"
+    },
+    "chunk-2ZVEUJUK": {
+      "file": "chunk-2ZVEUJUK.js"
+    },
+    "chunk-IOU5GDMK": {
+      "file": "chunk-IOU5GDMK.js"
+    },
+    "chunk-HJMO4AJE": {
+      "file": "chunk-HJMO4AJE.js"
+    },
+    "chunk-EHNEH3OL": {
+      "file": "chunk-EHNEH3OL.js"
+    },
+    "chunk-Y5USKZKS": {
+      "file": "chunk-Y5USKZKS.js"
+    },
+    "chunk-I2NKYIK3": {
+      "file": "chunk-I2NKYIK3.js"
+    },
+    "chunk-KLNXHDZH": {
+      "file": "chunk-KLNXHDZH.js"
+    },
+    "chunk-3GE3IU6C": {
+      "file": "chunk-3GE3IU6C.js"
+    },
+    "chunk-BBIPV2WG": {
+      "file": "chunk-BBIPV2WG.js"
+    },
+    "chunk-HGMXEH4Q": {
+      "file": "chunk-HGMXEH4Q.js"
+    },
+    "chunk-V4SOPYAJ": {
+      "file": "chunk-V4SOPYAJ.js"
+    },
+    "chunk-MHR3J37T": {
+      "file": "chunk-MHR3J37T.js"
+    },
+    "chunk-THR3AX43": {
+      "file": "chunk-THR3AX43.js"
+    },
+    "chunk-YLMQR52S": {
+      "file": "chunk-YLMQR52S.js"
+    },
+    "chunk-2LM4DU2J": {
+      "file": "chunk-2LM4DU2J.js"
+    },
+    "chunk-3EMLS5FJ": {
+      "file": "chunk-3EMLS5FJ.js"
+    },
+    "chunk-BUSYA2B4": {
+      "file": "chunk-BUSYA2B4.js"
+    }
+  }
+}
