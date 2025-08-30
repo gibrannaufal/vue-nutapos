@@ -1,23 +1,18 @@
 <script setup lang="ts">
-import diskonHome from '../assets/diskon-home.png'
-import chevrondown from '../assets/chevrondown.png'
+// import diskonHome from '../assets/diskon-home.png'
 import emptydiscount from '../assets/emptydiscount.png'
 import pencilIcon from '../assets/pencilicon.png'
 import { useDiskonStore } from '../../state/pinia/diskon'
 
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, toRaw } from 'vue'
 const isAvailable = ref(false);
 
 const selectedItem = ref('Kopi Anak Bangsa')
-const items = [
-  { name: 'Diskon Kopi', img: '/images/kopi.png' },
-  { name: 'Diskon Roti', img: '/images/roti.png' },
-  { name: 'Diskon Snack', img: '/images/snack.png' },
-]
-const dialog = ref(false)
 
 const store = useDiskonStore()
 
+const diskonDialog = ref<HTMLElement | null>(null)
+const deleteDialog = ref<HTMLElement | null>(null)
 const discountName = ref('')
 const discountValue = ref<number | null>(null)
 const discountType = ref('%')
@@ -29,10 +24,56 @@ const isUpdate = ref(false)
 const selectedIds = ref<string[]>([])
 const isDeleteMode = ref(false)
 
+const searchKeyword = ref('')
+
+const showAlert = ref(false)
+const alertMessage = ref('')
+
+const isErrorName = ref(false)
+const textErrorName = ref('')
+
+const isErrorValue = ref(false)
+const textErrorValue = ref('')
+
+const urlCrud = ref('')
+
+const sortKey = ref('');
+const sortOrder = ref('');
+
+function toggleSort(key: string) {
+  if (sortKey.value === key) {
+    if (sortOrder.value === '') {
+      sortOrder.value = 'asc';
+    } else if (sortOrder.value === 'asc') {
+      sortOrder.value = 'desc';
+    } else {
+      sortKey.value = '';
+      sortOrder.value = '';
+    }
+  } else {
+    sortKey.value = key;
+    sortOrder.value = 'asc';
+  }
+}
+
+function getSortIcon(key: string) {
+  if (sortKey.value !== key || sortOrder.value === '') return 'unfold_more';
+  return sortOrder.value === 'asc' ? 'arrow_upward' : 'arrow_downward';
+}
+
 function openDialog(type: string) {
+  idDiscount.value = null;
   discountType.value = type
-  dialog.value = true;
   isUpdate.value = false;
+  (diskonDialog.value as any)?.show()
+}
+
+function openDeleteDialog() {
+  // (deleteDialog.value as any)?.show()
+  (diskonDialog.value as any)?.close?.()
+  setTimeout(() => {
+    (deleteDialog.value as any)?.show?.()
+  }, 300) 
 }
 
 function setDiscountType(type: string) {
@@ -53,10 +94,9 @@ function editData(item: any) {
   discountName.value = item.nama,
     discountValue.value = item.nilai,
     discountType.value = item.tipe
-  dialog.value = true;
   isUpdate.value = true;
   idDiscount.value = item._id;
-
+  (diskonDialog.value as any)?.show()
 }
 
 async function simpanDiskon() {
@@ -64,32 +104,32 @@ async function simpanDiskon() {
   errorNilai.value = ''
 
   if (!discountName.value) {
-    errorNama.value = 'Nama diskon tidak boleh kosong.'
-
+    triggerAlert(discountName.value + "Nama diskon tidak boleh kosong.");
   }
 
   if (discountValue.value === null || discountValue.value === 0) {
-    errorNilai.value = 'Diskon tidak boleh kosong.'
+    triggerAlert(discountName.value + "Diskon tidak boleh kosong.");
   }
   isSubmitted.value = true;
 
 
-  if (errorNama.value || errorNilai.value) return
-
+  if (errorNama.value || errorNilai.value) {
+    (diskonDialog.value as any)?.close()
+    return
+  }
 
   const payload = {
     id: idDiscount.value ?? null,
     nama: discountName.value,
     nilai: discountValue.value,
     tipe: discountType.value,
-    kategori: selectedItem.value,
   }
 
   const res = await store.sendDiskon(payload)
   if (res.status === 200) {
-    triggerAlert(discountName.value + " Berhasil Disimpan")
+    triggerAlert(discountName.value + " Berhasil Disimpan");
 
-    dialog.value = false
+    (diskonDialog.value as any)?.close()
     discountName.value = ''
     discountValue.value = null
     discountType.value = '%'
@@ -99,49 +139,84 @@ async function simpanDiskon() {
   }
 }
 
-const showAlert = ref(false)
-const alertMessage = ref('')
-
-const rulesNamaDiskon = [
-  (value: string) => !!value || 'Nama diskon harus diisi.',
-  (value: string) => {
-    const namaSudahAda = diskonData.value.some(
-      item => item.nama.toLowerCase() === value.toLowerCase()
-    )
-    return !namaSudahAda || 'Nama diskon sudah digunakan.'
-  }
-]
-const rulesJumlahDiskon = [
-  (value: string) => !!value || 'Value diskon harus diisi.',
-]
-
 async function triggerAlert(message: string) {
   alertMessage.value = message
   showAlert.value = true
   setTimeout(() => {
     showAlert.value = false
-  }, 3000)
+  }, 1000)
 }
 
 async function hapusFunc() {
   for (const id of selectedIds.value) {
     await store.deleteDiskon(id)
   }
+  if (idDiscount.value) {
+    await store.deleteDiskon(idDiscount.value)
+  }
+
+  idDiscount.value = null;
 
   selectedIds.value = []
   isDeleteMode.value = false
 
-  await store.getDiskon()
-  diskonData.value = store.diskon
-  isAvailable.value = diskonData.value.length > 0
+  await store.getDiskon();
+  diskonData.value = store.diskon;
+  isAvailable.value = diskonData.value.length > 0;
+  (deleteDialog.value as any)?.close?.();
 }
 
+async function closeDialog() {
+  (diskonDialog.value as any)?.close()
+}
+
+function changeUrl() {
+  const rawUrl = toRaw(urlCrud.value);
+
+  if (!rawUrl.startsWith("https://")) {
+    alert("URL harus diawali dengan https://");
+    return;
+  }
+
+  store.apiUrl = rawUrl;
+
+  showAlert.value = true;
+  alertMessage.value = "Url berhasil disimpan"
+}
 
 async function toggleSelectAll() {
-  if (selectedIds.value.length === diskonData.value.length) {
+  if (selectedIds.value.length === filteredDiskon.value.length) {
+    isDeleteMode.value = false;
     selectedIds.value = []
   } else {
-    selectedIds.value = diskonData.value.map(item => item._id!)
+    isDeleteMode.value = true;
+    selectedIds.value = filteredDiskon.value.map(item => item._id!)
+  }
+}
+async function closeDeleteDialog() {
+  selectedIds.value = [];
+  (deleteDialog.value as any)?.close()
+}
+
+function toggleSelection(id: string) {
+  const index = selectedIds.value.indexOf(id);
+  if (index === -1) {
+    isDeleteMode.value = true;
+    selectedIds.value.push(id);
+  } else {
+    isDeleteMode.value = false;
+    selectedIds.value.splice(index, 1);
+  }
+}
+
+async function onMenuClose() {
+  console.log("Menu ditutup");
+}
+async function openMenu() {
+  console.log("Menu ditutup");
+  const menu = document.querySelector("#diskonMenu") as HTMLDialogElement;
+  if (menu) {
+    menu.open = !menu.open;
   }
 }
 
@@ -155,95 +230,163 @@ onMounted(async () => {
   }
 })
 
-const searchKeyword = ref('')
-const filteredDiskon = computed(() =>
-  diskonData.value.filter(item =>
+// const filteredDiskon = computed(() =>
+//   diskonData.value.filter(item =>
+//     item.nama.toLowerCase().includes(searchKeyword.value.toLowerCase())
+//   )
+// )
+
+const filteredDiskon = computed(() => {
+  let result = diskonData.value.filter(item =>
     item.nama.toLowerCase().includes(searchKeyword.value.toLowerCase())
+  );
+
+  if (sortKey.value && sortOrder.value) {
+    result.sort((a, b) => {
+      let valA = sortKey.value === 'nama'
+        ? a.nama.toLowerCase()
+        : a.nilai;
+      let valB = sortKey.value === 'nama'
+        ? b.nama.toLowerCase()
+        : b.nilai;
+
+      if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  return result;
+});
+
+function onSearchInput(e: Event) {
+  const target = e.target as HTMLInputElement;
+  searchKeyword.value = target.value.toString();
+}
+
+function validateDiscountName() {
+  const namaSudahAda = diskonData.value.some(
+    item => item.nama.toLowerCase() === discountName.value.toLowerCase()
   )
-)
+  if (!namaSudahAda) {
+    textErrorName.value = 'Nama diskon sudah digunakan';
+  }
 
+  if (!discountName.value.trim()) {
+    isErrorName.value = true;
+    textErrorName.value = 'Nama diskon tidak boleh kosong';
+  } else {
+    isErrorName.value = false;
+    textErrorName.value = '';
+  }
+}
 
-watch(selectedIds, (val) => {
-  isDeleteMode.value = val.length > 0
-})
+function validateDiscountValue() {
+  if (!discountName.value.trim()) {
+    isErrorValue.value = true;
+    textErrorValue.value = 'Value diskon tidak boleh kosong';
+  } else {
+    isErrorValue.value = false;
+    textErrorValue.value = '';
+  }
+}
 
 </script>
 
 <template>
-  <v-container class="text-center">
-    <div v-if="showAlert" class="d-flex justify-content-center w-100">
-      <v-alert class="my-4 custom-alert" transition="scale-transition">
+  <div class="container-wrapper">
+    <md-dialog :open="showAlert" class="custom-alert">
+      <div slot="headline"></div>
+      <div slot="content">
         {{ alertMessage }}
-      </v-alert>
-    </div>
+      </div>
+    </md-dialog>
 
     <div class="d-flex justify-content-between items-center">
       <h1 class="header-diskon">Daftar Diskon</h1>
-      <button v-if="isAvailable && !isDeleteMode" class="button-component" @click="dialog = true"> + Tambah
-        Diskon</button>
-      <div class="d-flex gap-2" v-if="isAvailable && isDeleteMode">
-        <button class="button-component" style="background-color: white; border: 1px solid #FF3553; color: #FF3553"
-          @click="toggleSelectAll">
-          Batalkan</button>
-        <button class="button-component" style="background-color: #FF3553; color: white" @click="hapusFunc">
-          Hapus</button>
+
+      <md-filled-button v-if="isAvailable && !isDeleteMode" class="button-component" @click="openDialog('create')">
+        <md-icon slot="icon">add</md-icon>
+        Tambah Diskon
+      </md-filled-button>
+
+      <div class="button-group d-flex gap-2" v-if="isAvailable && isDeleteMode">
+        <md-outlined-button class="button-component button-batalkan" @click="selectedIds = []; isDeleteMode = false">
+          Batalkan
+        </md-outlined-button>
+
+        <md-filled-button class="button-component button-hapus" @click="openDeleteDialog">
+          Hapus
+        </md-filled-button>
       </div>
     </div>
-    <p class="text-description" style="text-align: start; color: #869098">Total Jumlah Diskon : {{ filteredDiskon.length
-    }} </p>
+    <div class="d-flex justify-content-start text-start" v-if="isAvailable">
+      <p class="text-description" style="color: #869098">Total Jumlah Diskon : {{
+        filteredDiskon.length
+        }} </p>
+    </div>
+
     <div class="d-flex w-100 gap-3 align-center search-bar-wrapper">
-      <v-text-field v-model="searchKeyword" label="Cari diskon" placeholder="Contoh: Burger Hemat"
-        prepend-inner-icon="mdi-magnify" variant="outlined" density="compact" class="search-field" />
+      <!-- v-model="searchKeyword" -->
+      <md-outlined-text-field v-if="isAvailable" @input="onSearchInput" placeholder="Cari diskon" class="md-search-bar"
+        type="search">
+        <md-icon slot="leading-icon">search</md-icon>
+      </md-outlined-text-field>
 
-      <v-menu>
-        <template #activator="{ props }">
-          <button v-bind="props" class="btn-dropdown">
-            <img :src="diskonHome" alt="Diskon" class="icon-left" />
-            <div>{{ selectedItem }}</div>
-            <img :src="chevrondown" alt="Chevron" class="icon-right" />
-          </button>
-        </template>
 
-        <v-list>
-          <v-list-item v-for="(item, index) in items" :key="index" @click="selectedItem = item.name">
-            <v-list-item-avatar>
-              <v-img :src="item.img" />
-            </v-list-item-avatar>
-            <v-list-item-title>{{ item.name }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+      <md-filled-button id="menu-button" @click="openMenu" trailing-icon>
+        {{ selectedItem }}
+        <md-icon slot="icon">expand_more</md-icon>
+      </md-filled-button>
+
+      <md-menu id="diskonMenu" anchor="menu-button" @closed="onMenuClose" positioning="popover" class="w-100">
+        <div class="d-flex  justify-start flex-column w-auto m-3">
+          <md-outlined-text-field @input="(e: any) => urlCrud = e.target.value" label="Api url crudcrud"
+            placeholder="Api url crudcrud" class="w-100 mb-4" type="search">
+          </md-outlined-text-field>
+          <md-filled-button @click="changeUrl" trailing-icon>
+            Terapkan
+          </md-filled-button>
+        </div>
+      </md-menu>
+
     </div>
 
     <div class="container-card notAvailable" v-if="!isAvailable">
       <img :src="emptydiscount" alt="empty" class="w-10 h-5" />
       <h2 class="text-medium">Belum Ada Diskon</h2>
       <h2 class="text-description">Silahkan tambah diskon untuk menarik pelanggan dan meningkatkan penjualan.</h2>
-      <button class="button-component" @click="openDialog('create')"> + Tambah Diskon</button>
+      <md-filled-button class="button-component" @click="openDialog('create')">
+        <md-icon slot="icon">add</md-icon>
+        Tambah Diskon
+      </md-filled-button>
     </div>
-    <div class="container-card isAvailable" v-if="isAvailable">
-      <v-table class="mt-4 w-100" style="border-radius: 8px; border: 1px solid #ECEDEF;">
+    <div class="isAvailable" v-if="isAvailable">
+      <table class="table mt-4 w-100" style=" border: 1px solid #ECEDEF; border-collapse: separate; border-spacing: 0;">
         <thead style="background-color: #F9FAFA;">
           <tr>
-            <th>
-              <v-checkbox :model-value="selectedIds.length === diskonData.length" @click="toggleSelectAll" hide-details
-                density="compact" />
+            <th style="border-top-left-radius: 8px;">
+              <md-checkbox :checked="selectedIds.length === filteredDiskon.length" @change="toggleSelectAll"
+                aria-label="Select item"></md-checkbox>
             </th>
 
-            <th class="text-left">Nama Diskon</th>
-            <th class="text-left">Nilai Diskon</th>
-            <th></th>
+            <th class="text-left" @click="toggleSort('nama')">
+              Nama Diskon
+              <md-icon>{{ getSortIcon('nama') }}</md-icon>
+            </th>
+            <th class="text-left" @click="toggleSort('nilai')">
+              Nilai Diskon
+              <md-icon>{{ getSortIcon('nilai') }}</md-icon>
+
+            </th>
+            <th style="border-top-right-radius: 8px;"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="item in filteredDiskon" :key="item._id">
             <td>
-              <v-checkbox :model-value="selectedIds.includes(item._id!)" @click="() => {
-                isDeleteMode = true;
-                const index = selectedIds.indexOf(item._id!)
-                if (index > -1) selectedIds.splice(index, 1)
-                else selectedIds.push(item._id!)
-              }" hide-details density="compact" />
+              <md-checkbox :checked="selectedIds.includes(item._id!)" @change="toggleSelection(item._id!)"
+                aria-label="Select item"></md-checkbox>
             </td>
 
             <td>{{ item.nama }}</td>
@@ -258,49 +401,82 @@ watch(selectedIds, (val) => {
             </td>
           </tr>
         </tbody>
-      </v-table>
+      </table>
     </div>
-    <v-dialog v-model="dialog" max-width="500px" persistent>
-      <v-card>
-        <v-card-title class="text-h6 d-flex justify-content-between">
-          <span v-if="isUpdate"> Update Data</span>
-          <span v-if="!isUpdate"> Tambah Data</span>
-          <div icon @click="dialog = false; isUpdate = false" size="small" variant="text">
-            <v-icon>mdi-close</v-icon>
+    <md-dialog @closed="closeDialog" ref="diskonDialog" class="modalDialog mw-100">
+
+      <div slot="headline">
+        <div class="d-flex justify-content-between w-100">
+          {{ isUpdate ? 'Update Data' : 'Tambah Data' }}
+          <md-icon @click="closeDialog">close</md-icon>
+        </div>
+      </div>
+      <div slot="content" class="d-flex flex-column w-100 wrapper-content ">
+        <md-outlined-text-field @input="(e: any) => discountName = e.target.value" :value="discountName"
+          label="Nama Diskon" placeholder="Misal: Diskon Opening, Diskon Akhir Tahun" type="text" required class="mb-3"
+          @blur="validateDiscountName" :error="isErrorName" :error-text="textErrorName"></md-outlined-text-field>
+
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px; width: 100%;">
+          <md-outlined-text-field type="number" label="Tipe Diskon" required style="width: 70%;"
+            @input="(e: any) => discountValue = e.target.value" :value="discountValue" @blur="validateDiscountValue"
+            :error="isErrorValue" :error-text="textErrorValue"></md-outlined-text-field>
+
+          <div class="button-group d-flex">
+            <button class="button-icon left-rounded" :class="[, discountType === '%' ? 'filled' : 'outlined']"
+              @click="setDiscountType('%')">
+              %
+            </button>
+
+            <button class="button-icon right-rounded" :class="[discountType === 'Rp' ? 'filled' : 'outlined']"
+              @click="setDiscountType('Rp')">
+              Rp
+            </button>
           </div>
-        </v-card-title>
-        <v-card-text class="w-100">
+        </div>
 
-          <v-text-field v-model="discountName" :rules="rulesNamaDiskon" label="Nama Diskon" class="mb-3"
-            placeholder="Misal: Diskon Opening, Diskon Akhir Tahun" variant="outlined" density="compact" />
+      </div>
 
-          <!-- v-model="discountValue" -->
-          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px; width: 100%;">
-            <v-text-field v-model="discountValue" :rules="rulesJumlahDiskon" label="Diskon" type="number"
-              variant="outlined" density="compact" style="flex: 1;" />
-
-            <div class="discount-toggle">
-              <button :class="['button-component', discountType === '%' ? 'active' : 'inactive']"
-                @click="setDiscountType('%')">
-                %
-              </button>
-              <button :class="['button-component', discountType === 'Rp' ? 'active' : 'inactive']"
-                @click="setDiscountType('Rp')">
-                Rp
-              </button>
-            </div>
+      <div slot="actions">
+        <div class="d-flex justify-content-between w-100">
+          <div v-if="isUpdate" style="text-align: start; color:#FF3553 ; cursor:pointer" @click="openDeleteDialog">Hapus
           </div>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <button class="button-component w-100" @click="simpanDiskon">Simpan</button>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+          <md-filled-button :class="{ 'w-100': !isUpdate }" @click="simpanDiskon">Simpan</md-filled-button>
+        </div>
+      </div>
+    </md-dialog>
+
+    <md-dialog @closed="closeDeleteDialog" ref="deleteDialog" class="custom-dialog mw-100">
+      <div slot="headline">
+        <div class="d-flex justify-content-between w-100">
+          Hapus Diskon
+        </div>
+      </div>
+      <div slot="content" class="d-flex flex-column w-100 wrapper-content text-black ">
+        Apakah Anda yakin ingin menghapus diskon yang dipilih?
+        - Diskon yang dihapus tidak bisa dikembalikan lagi.
+      </div>
+
+      <div slot="actions">
+        <div class="button-group d-flex gap-2">
+          <md-outlined-button class="button-component button-batalkan" @click="closeDeleteDialog">
+            Batalkan
+          </md-outlined-button>
+
+          <md-filled-button class="button-component button-hapus" @click="hapusFunc">
+            Hapus
+          </md-filled-button>
+        </div>
+      </div>
+    </md-dialog>
+  </div>
 </template>
 
 <style scoped>
+.container-wrapper {
+  background-color: white;
+  padding: 20px;
+}
+
 .text-medium {
   font-weight: 600;
   font-size: 22px
@@ -312,6 +488,84 @@ watch(selectedIds, (val) => {
 }
 
 
+.button-batalkan {
+  --md-outlined-button-outline-color: #FF3553;
+  --md-sys-color-primary: #FF3553;
+  --md-sys-color-surface: #FFFFFF;
+  font-weight: 500;
+}
+
+.button-hapus {
+  --md-sys-color-primary: #FF3553;
+  --md-sys-color-on-primary: #FFFFFF;
+  font-weight: 500;
+}
+
+.md-search-bar {
+  width: 100%;
+  --md-outlined-text-field-container-height: 40px;
+
+  /* Opsional: atur ukuran ikon */
+  --md-outlined-text-field-leading-icon-size: 18px;
+  /* Tinggi cukup nyaman */
+  --md-outlined-text-field-container-shape: 24px;
+  /* Rounded lebih bulat */
+  --md-outlined-text-field-outline-width: 1px;
+  --md-outlined-text-field-outline-color: rgba(0, 0, 0, 0.38);
+  --md-outlined-text-field-focus-outline-color: var(--md-sys-color-primary, #6200ee);
+  max-width: 240px;
+
+}
+
+
+.left-rounded {
+  border-radius: 20px 0px 0px 20px;
+}
+
+.right-rounded {
+  border-radius: 0px 20px 20px 0px;
+}
+
+.isNonActive {
+  --md-filled-button-container-color: white;
+  --md-filled-tonal-button-container-shape: 0px;
+}
+
+.button-icon {
+  width: 80px;
+  border: 1px solid #3DAE2F;
+  background-color: white;
+  padding: 10px;
+  color: #3DAE2F;
+}
+
+/* .button-icon:hover {
+  border: inherit;
+  background-color: inherit;
+  padding: 10px;
+} */
+
+.filled {
+  color: white;
+  background-color: #3DAE2F;
+  border: 0;
+}
+
+.outline {
+  border: 1px solid #3DAE2F;
+  background-color: white;
+  color: #3DAE2F;
+}
+
+.modalDialog {
+  --md-dialog-container-color: white;
+  min-width: 40rem;
+  min-height: 40%;
+}
+
+.wrapper-content {
+  min-height: 0;
+}
 
 .discount-toggle {
   display: flex;
@@ -334,27 +588,6 @@ watch(selectedIds, (val) => {
 .button-component {
   width: auto;
   height: 40px;
-  border-radius: 20px;
-  min-width: 164px;
-  background-color: #3DAE2F;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-right: 24px;
-  padding-left: 24px;
-  border: none;
-  box-shadow: none;
-  outline: 0;
-  color: #FFFFFF;
-}
-
-.button-component.active {
-  background-color: #F0FBEF;
-  color: #3DAE2F;
-}
-
-.button-component.inactive {
-  background-color: white;
-  color: #333;
 }
 
 
@@ -434,14 +667,18 @@ watch(selectedIds, (val) => {
 }
 
 .custom-alert {
+  --md-dialog-container-color: #046B5F;
+  --md-dialog-supporting-text-color: white;
+  --md-dialog-container-shape: 8px;
   max-width: 300px;
-  background-color: #046B5F;
-  color: white;
-  padding: 14px 16px;
-  border-radius: 8px;
+  max-height: 100px;
   margin-top: 16px;
-  font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: opacity 0.3s ease;
+}
+
+.custom-dialog {
+  --md-dialog-container-color: white;
+  --md-dialog-supporting-text-color: black;
+  --md-dialog-container-shape: 8px;
+  max-width: 300px;
 }
 </style>

@@ -19,12 +19,8 @@ body,
   padding: 0;
 }
 
-.v-field__input {
-  border: 1px solid #CDD2D5  ;
-  outline: none !important;
-  box-shadow: none !important;
+:root {
+  --md-sys-color-primary: #3DAE2F;
+  --md-sys-color-on-primary: #FFFFFF;
 }
 
-.v-field__input--focused {
-  box-shadow: none !important;
-}
